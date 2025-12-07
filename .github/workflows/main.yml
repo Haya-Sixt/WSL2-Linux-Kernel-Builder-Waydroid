@@ -9,11 +9,11 @@ on:
 jobs:
 
   call-build:
-    strategy:
-      matrix:
-        branch: ['linux-msft-wsl-6.6.y']
-    uses: ./.github/workflows/build.yml@main
-    with:
-      branch: ${{ matrix.branch }}
+    #strategy:
+    #  matrix:
+    #    branch: 'linux-msft-wsl-6.6.y'
+    uses: ./build.yml@main
+    #with:
+    #  branch: ${{ matrix.branch }}
     secrets:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
