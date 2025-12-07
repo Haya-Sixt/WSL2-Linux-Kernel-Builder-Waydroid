@@ -37,18 +37,18 @@ jobs:
       working-directory: ./kernel-${{ inputs.branch }}
       run: cp Microsoft/config-wsl ./.config
 
-    - name: Apply USB Config # for 5.4. branch only?
+    - name: Apply Waydroid Config
       working-directory: ./kernel-${{ inputs.branch }}
       run: scripts/kconfig/merge_config.sh -m -y .config ../waydroid.config
-
-    - name: Apply Waydroid Config # for Waydroid config
+      
+    - name: Apply USB Config # for 5.4. branch only?
       working-directory: ./kernel-${{ inputs.branch }}
       run: scripts/kconfig/merge_config.sh -m -y .config ../usb.config
 
     - name: Apply CAN Config
       working-directory: ./kernel-${{ inputs.branch }}
       run: |
-    #    sed -Ei "s/(CONFIG_LOCALVERSION=\")(.*)(\")/\1-can-usbip-WSL2\3/g" .config
+    #    sed -Ei "s/(CONFIG_LOCALVERSION=\")(.*)(\")/\1-can-usbip-WSL2\3/g" .config  # -> /lib/modules/6.6.114.1-can-usbip-WSL2+
     #    for file in ../[^usb]*.config; do scripts/kconfig/merge_config.sh -m -y .config $file ; done
         scripts/kconfig/merge_config.sh -y .config ../can.config
 
