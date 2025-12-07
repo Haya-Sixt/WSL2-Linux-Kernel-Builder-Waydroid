@@ -5,7 +5,8 @@ on:
     inputs:
       branch:
         description: 'Kernel branch to check out'
-        required: true
+        required: false
+        default: 'linux-msft-wsl-6.6.y'
         type: string
     secrets:
       GITHUB_TOKEN:
