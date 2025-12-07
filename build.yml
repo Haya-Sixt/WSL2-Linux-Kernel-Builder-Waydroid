@@ -46,12 +46,12 @@ jobs:
       working-directory: ./kernel-${{ inputs.branch }}
       run: scripts/kconfig/merge_config.sh -m -y .config ../usb.config
 
-    #- name: Apply CAN Config
-    #  working-directory: ./kernel-${{ inputs.branch }}
-    #  run: |
+    - name: Apply CAN Config
+      working-directory: ./kernel-${{ inputs.branch }}
+      run: |
     #    sed -Ei "s/(CONFIG_LOCALVERSION=\")(.*)(\")/\1-can-usbip-WSL2\3/g" .config
     #    for file in ../[^usb]*.config; do scripts/kconfig/merge_config.sh -m -y .config $file ; done
-    #    scripts/kconfig/merge_config.sh -y .config ../can.config
+        scripts/kconfig/merge_config.sh -y .config ../can.config
 
     - name: Build
       working-directory: ./kernel-${{ inputs.branch }}
@@ -62,5 +62,5 @@ jobs:
     - name: Archive kernel
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.branch }}-can-usbip-wd-ksm
+        name: ${{ replace(inputs.branch, '.', '-') }}-can-usb-waydroid-kasm
         path: kernel-${{ inputs.branch }}/arch/x86/boot/${{ inputs.branch }}-can-usbip-wd-ksm
