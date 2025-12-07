@@ -46,21 +46,21 @@ jobs:
       working-directory: ./kernel-${{ inputs.branch }}
       run: scripts/kconfig/merge_config.sh -m -y .config ../usb.config
 
-    - name: Apply CAN Config
-      working-directory: ./kernel-${{ inputs.branch }}
-      run: |
-        sed -Ei "s/(CONFIG_LOCALVERSION=\")(.*)(\")/\1-can-usbip-WSL2\3/g" .config
-        for file in ../[^usb]*.config; do scripts/kconfig/merge_config.sh -m -y .config $file ; done
-        scripts/kconfig/merge_config.sh -y .config ../can.config
+    #- name: Apply CAN Config
+    #  working-directory: ./kernel-${{ inputs.branch }}
+    #  run: |
+    #    sed -Ei "s/(CONFIG_LOCALVERSION=\")(.*)(\")/\1-can-usbip-WSL2\3/g" .config
+    #    for file in ../[^usb]*.config; do scripts/kconfig/merge_config.sh -m -y .config $file ; done
+    #    scripts/kconfig/merge_config.sh -y .config ../can.config
 
     - name: Build
       working-directory: ./kernel-${{ inputs.branch }}
       run: |
         make -j $(echo `nproc` + 1 | bc)
-        mv arch/x86/boot/bzImage arch/x86/boot/${{ inputs.branch }}-can-usbip-wd-ksm-bzImage
+        mv arch/x86/boot/bzImage arch/x86/boot/${{ inputs.branch }}-can-usbip-wd-ksm
 
     - name: Archive kernel
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.branch }}-can-usbip-wd-ksm
-        path: kernel-${{ inputs.branch }}/arch/x86/boot/${{ inputs.branch }}-can-usbip-wd-ksm-bzImage
+        path: kernel-${{ inputs.branch }}/arch/x86/boot/${{ inputs.branch }}-can-usbip-wd-ksm
