@@ -12,7 +12,7 @@ jobs:
     #strategy:
     #  matrix:
     #    branch: 'linux-msft-wsl-6.6.y'
-    uses: ./build.yml@main
+    uses: ./.github/workflows/build.yml@main
     #with:
     #  branch: ${{ matrix.branch }}
     secrets:
