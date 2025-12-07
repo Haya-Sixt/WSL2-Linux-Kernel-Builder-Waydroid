@@ -61,5 +61,5 @@ jobs:
     - name: Archive kernel
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ replace(matrix.branch, '.', '-') }}-can-usb-waydroid-kasm
+        name: ${{ matrix.branch }}-can-usb-waydroid-kasm
         path: kernel-${{ matrix.branch }}/arch/x86/boot/bzImage
