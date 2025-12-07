@@ -2,18 +2,64 @@ name: Kernel Build
 
 on:
   workflow_dispatch:
-  push:
+#  push:
 #  schedule:
 #    - cron: '30 5 * * 1'
 
 jobs:
 
-  call-build:
-    #strategy:
-    #  matrix:
-    #    branch: 'linux-msft-wsl-6.6.y'
-    uses: ./.github/workflows/build.yml@main
-    #with:
-    #  branch: ${{ matrix.branch }}
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  build:
+    strategy:
+      matrix:
+        branch: ['linux-msft-wsl-6.6.y']
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout WSL2 Kernel Builder
+      uses: actions/checkout@v3
+
+    - name: Checkout WSL2 Kernel Repo
+      uses: actions/checkout@v3
+      with:
+        repository: 'microsoft/WSL2-Linux-Kernel'
+        ref: ${{ matrix.branch }}
+        path: 'kernel-${{ matrix.branch }}'
+
+    - name: Install Toolchain
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential flex bison libssl-dev libelf-dev libncurses-dev autoconf libudev-dev libtool dwarves
+
+    - name: Get Default Config
+      working-directory: ./kernel-${{ matrix.branch }}
+      run: cp Microsoft/config-wsl ./.config
+
+    - name: Apply Waydroid Config
+      working-directory: ./kernel-${{ matrix.branch }}
+      run: scripts/kconfig/merge_config.sh -m -y .config ../waydroid.config
+      
+    - name: Apply USB Config
+      working-directory: ./kernel-${{ matrix.branch }}
+      run: scripts/kconfig/merge_config.sh -m -y .config ../usb.config
+
+    - name: Apply CAN Config
+      working-directory: ./kernel-${{ matrix.branch }}
+      run: scripts/kconfig/merge_config.sh -m -y .config ../can.config
+
+    - name: Build
+      working-directory: ./kernel-${{ matrix.branch }}
+      run: |
+        make -j $(echo `nproc` + 1 | bc)
+        make modules -j $(echo `nproc` + 1 | bc)
+        
+    - name: Install modules
+      working-directory: ./kernel-${{ matrix.branch }}
+      run: |
+        sudo make modules_install
+        sudo depmod -a $(uname -r)
+
+    - name: Archive kernel
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ replace(matrix.branch, '.', '-') }}-can-usb-waydroid-kasm
+        path: kernel-${{ matrix.branch }}/arch/x86/boot/bzImage
