@@ -1,17 +1,19 @@
 name: Kernel Build
 
 on:
-  workflow_dispatch:
-  push:
-  schedule:
-    - cron: '30 5 * * 1'
+  workflow_call:
+    inputs:
+      branch:
+        description: 'Kernel branch to check out'
+        required: true
+        type: string
+    secrets:
+      GITHUB_TOKEN:
+        required: false
 
 jobs:
 
   build:
-    strategy:
-      matrix:
-        branch: ['linux-msft-wsl-6.6.y']
     runs-on: ubuntu-latest
     steps:
 
@@ -22,42 +24,42 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: 'microsoft/WSL2-Linux-Kernel'
-        ref: ${{ matrix.branch }}
-        path: 'kernel-${{ matrix.branch }}'
+        ref: ${{ inputs.branch }}
+        path: 'kernel-${{ inputs.branch }}'
 
     - name: Install Toolchain
       run: |
         sudo apt update
-        sudo apt install build-essential flex bison libssl-dev libelf-dev libncurses-dev autoconf libudev-dev libtool dwarves
+        sudo apt install -y build-essential flex bison libssl-dev libelf-dev libncurses-dev autoconf libudev-dev libtool dwarves
 
     - name: Get Default Config
-      working-directory: ./kernel-${{ matrix.branch }}
+      working-directory: ./kernel-${{ inputs.branch }}
       run: cp Microsoft/config-wsl ./.config
 
     - name: Apply USB Config # for 5.4. branch only
-      #if: ${{ matrix.branch == 'linux-msft-wsl-5.4.y' }}
-      working-directory: ./kernel-${{ matrix.branch }}
+      # if you need a conditional here, the caller can pass an additional input
+      working-directory: ./kernel-${{ inputs.branch }}
       run: scripts/kconfig/merge_config.sh -m -y .config ../waydroid.config
 
     - name: Apply Waydroid Config # for Waydroid config
-      working-directory: ./kernel-${{ matrix.branch }}
+      working-directory: ./kernel-${{ inputs.branch }}
       run: scripts/kconfig/merge_config.sh -m -y .config ../usb.config
 
     - name: Apply CAN Config
-      working-directory: ./kernel-${{ matrix.branch }}
+      working-directory: ./kernel-${{ inputs.branch }}
       run: |
         sed -Ei "s/(CONFIG_LOCALVERSION=\")(.*)(\")/\1-can-usbip-WSL2\3/g" .config
         for file in ../[^usb]*.config; do scripts/kconfig/merge_config.sh -m -y .config $file ; done
         scripts/kconfig/merge_config.sh -y .config ../can.config
 
     - name: Build
-      working-directory: ./kernel-${{ matrix.branch }}
+      working-directory: ./kernel-${{ inputs.branch }}
       run: |
         make -j $(echo `nproc` + 1 | bc)
-        mv arch/x86/boot/bzImage arch/x86/boot/${{ matrix.branch }}-can-usbip-wd-ksm-bzImage
+        mv arch/x86/boot/bzImage arch/x86/boot/${{ inputs.branch }}-can-usbip-wd-ksm-bzImage
 
     - name: Archive kernel
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.branch }}-can-usbip-wd-ksm
-        path: kernel-${{ matrix.branch }}/arch/x86/boot/${{ matrix.branch }}-can-usbip-wd-ksm-bzImage
+        name: ${{ inputs.branch }}-can-usbip-wd-ksm
+        path: kernel-${{ inputs.branch }}/arch/x86/boot/${{ inputs.branch }}-can-usbip-wd-ksm-bzImage
