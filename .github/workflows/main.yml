@@ -2,7 +2,7 @@ name: Kernel Build
 
 on:
   workflow_dispatch:
-#  push:
+  push:
 #  schedule:
 #    - cron: '30 5 * * 1'
 
